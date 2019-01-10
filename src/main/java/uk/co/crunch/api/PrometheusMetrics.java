@@ -49,6 +49,12 @@ public class PrometheusMetrics {
         this.descriptionMappings = checkNotNull(props);
     }
 
+    // Clear out the configured CollectorRegistry as well as internal storage
+    public void clear() {
+        this.metrics.clear();
+        this.registry.clear();
+    }
+
     // Map Dropwizard Timer to a Prometheus Summary (I think)
     @CheckReturnValue
     public Summary timer(String name) {
