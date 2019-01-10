@@ -177,6 +177,24 @@ public class PrometheusMetricsTest {
     }
 
     @Test
+    public void testClear() {
+        assertThat(samplesString(registry)).isEqualTo("[]");
+
+        metrics.counter("counter_1").inc(1);
+        assertThat(samplesString(registry)).contains("counter_1").contains("Value: 1.0");
+
+        metrics.clear();
+        assertThat(samplesString(registry)).isEqualTo("[]");
+
+        // Count again with the same name to check that no prior state is maintained
+        metrics.counter("counter_1").inc(21);
+        assertThat(samplesString(registry)).contains("counter_1").contains("Value: 21.0");
+
+        metrics.clear();
+        assertThat(samplesString(registry)).isEqualTo("[]");
+    }
+
+    @Test
     public void testHotspotExports() {
         final Collector c = new StandardExports();
         metrics.registerCustomCollector(c);
