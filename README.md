@@ -1,4 +1,4 @@
-# Demonstration of an alternative Prometheus API
+# A simplified Prometheus API for Java
 
 [![Build Status](https://travis-ci.org/crunch-accounting/prometheus-api.svg?branch=master)](https://travis-ci.org/crunch-accounting/prometheus-api) [![codecov](https://codecov.io/gh/crunch-accounting/prometheus-api/branch/master/graph/badge.svg)](https://codecov.io/gh/crunch-accounting/prometheus-api)
 
