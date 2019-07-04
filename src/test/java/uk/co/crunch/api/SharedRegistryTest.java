@@ -4,7 +4,7 @@ import io.prometheus.client.CollectorRegistry;
 import org.junit.Test;
 
 public class SharedRegistryTest {
-    private CollectorRegistry registry = CollectorRegistry.defaultRegistry;
+    private final CollectorRegistry registry = CollectorRegistry.defaultRegistry;
 
     @SuppressWarnings("CheckReturnValue")
     @Test

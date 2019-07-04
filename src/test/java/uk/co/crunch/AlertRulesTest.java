@@ -43,7 +43,7 @@ public class AlertRulesTest {
     public void testGenerationV1X() throws IOException {
         final AlertRules rules = this.getClass().getAnnotation(AlertRules.class);
 
-        assertThat( AlertRulesGenerator.buildRulesFile(PrometheusVersion.V1_X, "Test", "???", rules.value()).trim() )
+        assertThat( AlertRulesGenerator.INSTANCE.buildRulesFile(PrometheusVersion.V1_X, "Test", "???", rules.value()).trim() )
                 .isEqualTo( Files.asCharSource(new File("src/test/resources/expectations/generated_rules.rule"), Charsets.UTF_8).read().trim() );
     }
 
@@ -51,7 +51,7 @@ public class AlertRulesTest {
     public void testGenerationV2X() throws IOException {
         final AlertRules rules = this.getClass().getAnnotation(AlertRules.class);
 
-        assertThat( AlertRulesGenerator.buildRulesFile(PrometheusVersion.V2_X, "Test", rules.groupName(), rules.value()).trim() )
+        assertThat( AlertRulesGenerator.INSTANCE.buildRulesFile(PrometheusVersion.V2_X, "Test", rules.groupName(), rules.value()).trim() )
                 .isEqualTo( Files.asCharSource(new File("src/test/resources/expectations/generated_rules.yml"), Charsets.UTF_8).read().trim() );
     }
 
@@ -67,7 +67,7 @@ public class AlertRulesTest {
     public void testExtra() throws IOException, NoSuchMethodException {
         final AlertRule thisRule = this.getClass().getMethod("testExtra").getAnnotation(AlertRule.class);
 
-        assertThat( AlertRulesGenerator.buildRulesFile(PrometheusVersion.V2_X, "audit-service", "Untilted", thisRule).trim() )
+        assertThat( AlertRulesGenerator.INSTANCE.buildRulesFile(PrometheusVersion.V2_X, "audit-service", "Untilted", thisRule).trim() )
                 .isEqualTo( Files.asCharSource(new File("src/test/resources/expectations/individual_rule.yml"), Charsets.UTF_8).read().trim() );
     }
 }

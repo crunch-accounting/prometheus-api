@@ -6,8 +6,6 @@ import org.junit.Before;
 import org.junit.Test;
 import uk.co.crunch.api.PrometheusMetrics;
 
-import java.io.IOException;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static uk.co.crunch.TestUtils.samplesString;
 
