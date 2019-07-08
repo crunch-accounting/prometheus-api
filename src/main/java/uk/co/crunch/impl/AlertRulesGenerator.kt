@@ -5,7 +5,6 @@ import uk.co.crunch.api.PrometheusVersion
 import uk.co.crunch.impl.v1x.AlertRulesGenerator1x
 import uk.co.crunch.impl.v2x.AlertRulesGenerator2x
 import uk.co.crunch.utils.PrometheusUtils
-import java.util.*
 
 object AlertRulesGenerator {
 
@@ -29,7 +28,7 @@ object AlertRulesGenerator {
         labels["severity"] = rule.severity.toString().toLowerCase()
 
         for (label in rule.labels) {
-            (labels as java.util.Map<String, String>).putIfAbsent(label.name, label.value)
+            labels.putIfAbsent(label.name, label.value)
         }
 
         return labels
@@ -47,7 +46,7 @@ object AlertRulesGenerator {
         }
 
         for (ann in rule.annotations) {
-            (anns as java.util.Map<String, String>).putIfAbsent(ann.name, ann.value)
+            anns.putIfAbsent(ann.name, ann.value)
         }
 
         return anns
