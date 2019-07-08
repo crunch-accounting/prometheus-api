@@ -1,13 +1,13 @@
 package uk.co.crunch.api
 
 import io.prometheus.client.CollectorRegistry
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class SharedRegistryTest {
     private val registry = CollectorRegistry.defaultRegistry
 
     @Test
-    fun testExample() {
+    fun example() {
         val metrics1 = PrometheusMetrics(registry, "Example")
         metrics1.counter("hello")
         metrics1.gauge("gauge")
