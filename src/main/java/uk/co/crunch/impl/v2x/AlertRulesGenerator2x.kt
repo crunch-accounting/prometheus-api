@@ -45,7 +45,6 @@ object AlertRulesGenerator2x {
         return yaml.dumpAsMap(AlertRulesPojo(group))
     }
 
-    @JvmStatic
     @VisibleForTesting
     fun titlecase(s: String): String {
         if (s.isEmpty()) {
@@ -81,7 +80,11 @@ object AlertRulesGenerator2x {
         }
     }
 
-    private class AlertRulePojo internal constructor(alert: String, internal var expr: String, internal var duration: String, internal var labels: Map<String, String>, internal var annotations: Map<String, String>) {
+    private class AlertRulePojo internal constructor(alert: String,
+                                                     internal var expr: String,
+                                                     internal var duration: String,
+                                                     internal var labels: Map<String, String>,
+                                                     internal var annotations: Map<String, String>) {
         internal var alert = "OpenstackCinderVolumeStuck"
 
         init {

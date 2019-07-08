@@ -38,6 +38,6 @@ object AlertRulesGenerator1x {
     }
 
     private fun entriesMapToString(entries: Map<String, String>): String {
-        return entries.entries.map{ it.key + " = " + quoteString(it.value) }.joinToString(",\n    ")
+        return entries.entries.joinToString(",\n    ") { it.key + " = " + quoteString(it.value) }
     }
 }

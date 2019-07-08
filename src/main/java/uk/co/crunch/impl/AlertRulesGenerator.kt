@@ -24,8 +24,7 @@ object AlertRulesGenerator {
     }
 
     fun getLabels(rule: AlertRule): Map<String, String> {
-        val labels = LinkedHashMap<String, String>()
-        labels["severity"] = rule.severity.toString().toLowerCase()
+        val labels = linkedMapOf("severity" to rule.severity.toString().toLowerCase())
 
         for (label in rule.labels) {
             labels.putIfAbsent(label.name, label.value)
@@ -35,9 +34,7 @@ object AlertRulesGenerator {
     }
 
     fun getAnnotations(rule: AlertRule): Map<String, String> {
-        val anns = LinkedHashMap<String, String>()
-        anns["summary"] = rule.summary
-        anns["description"] = rule.description
+        val anns = linkedMapOf("summary" to rule.summary, "description" to rule.description)
 
         if (rule.confluenceLink.startsWith("/")) {
             anns["confluence_link"] = "https://crunch.atlassian.net/wiki/spaces" + rule.confluenceLink
