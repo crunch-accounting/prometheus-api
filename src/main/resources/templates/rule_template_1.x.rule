@@ -1,9 +1,0 @@
-ALERT {{ title(trim(prefix)) }}{{ title(trim(alertName)) }}
-  IF {{ rule }}
-  FOR {{ duration }}
-  LABELS {
-    {{ labels }}
-  }
-  ANNOTATIONS {
-    {{ annotations }}
-  }

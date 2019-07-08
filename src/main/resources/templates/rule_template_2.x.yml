@@ -1,8 +1,0 @@
-alert: {{ title(trim(prefix)) }}{{ title(trim(alertName)) }}
-expr: {{ rule }}
-for: {{ duration }}
-labels:
-{{ labels }}
-
-annotations:
-{{ annotations }}

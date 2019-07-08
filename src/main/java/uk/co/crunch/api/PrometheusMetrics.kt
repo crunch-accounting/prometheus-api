@@ -1,18 +1,15 @@
 package uk.co.crunch.api
 
 import com.google.common.annotations.VisibleForTesting
+import io.prometheus.client.Collector
+import io.prometheus.client.CollectorRegistry
 import uk.co.crunch.utils.PrometheusUtils
-
-import javax.annotation.CheckReturnValue
 import java.io.Closeable
-import java.util.Optional
-import java.util.Properties
-import java.util.concurrent.ConcurrentHashMap
-
-import com.google.common.base.MoreObjects.firstNonNull
-import io.prometheus.client.*
+import java.util.*
 import java.util.Optional.empty
 import java.util.Optional.of
+import java.util.concurrent.ConcurrentHashMap
+import javax.annotation.CheckReturnValue
 
 // More friendly, MetricRegistry-inspired Prometheus API wrapper
 // FIXME Ideally want to inject application name into this (or create Spring wrapper)
@@ -123,7 +120,7 @@ class PrometheusMetrics {
             throw IllegalArgumentException("$adjustedName is already used for a different type of metric")
         }
 
-        val description = desc.orElse(firstNonNull(descriptionMappings.getProperty(name), adjustedName))
+        val description = desc.orElse(descriptionMappings.getProperty(name) ?: adjustedName)
         val newMetric = builder.newMetric(adjustedName, description, this.registry)
 
         this.metrics.putIfAbsent(adjustedName, newMetric)
@@ -141,7 +138,7 @@ class PrometheusMetrics {
     private fun getErrorCounter(desc: Optional<String>): io.prometheus.client.Counter? {
         if (this.errorCounter == null) {
             val adjustedName = metricNamePrefix + "errors"
-            val description = desc.orElse(firstNonNull(descriptionMappings.getProperty(adjustedName), adjustedName))
+            val description = desc.orElse( descriptionMappings.getProperty(adjustedName) ?: adjustedName)
             this.errorCounter = registerPrometheusMetric(io.prometheus.client.Counter.build().name(adjustedName).help(description).labelNames("error_type").create(), registry)
         }
         return this.errorCounter

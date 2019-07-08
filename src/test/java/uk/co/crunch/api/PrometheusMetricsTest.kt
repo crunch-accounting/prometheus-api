@@ -1,7 +1,5 @@
 package uk.co.crunch.api
 
-import com.google.common.base.Charsets
-import com.google.common.io.Files
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.TestableTimeProvider
 import io.prometheus.client.hotspot.StandardExports
@@ -20,7 +18,7 @@ class PrometheusMetricsTest {
     private lateinit var registry: CollectorRegistry
 
     private val timedValueDemonstratingFriendlyTimingSyntax: String
-        get() = metrics.histogram("Test_calc1").time().use { ignored -> return "Hi" }
+        get() = metrics.histogram("Test_calc1").time().use { return "Hi" }
 
     @Before
     fun setUp() {
@@ -30,7 +28,7 @@ class PrometheusMetricsTest {
         metrics = PrometheusMetrics(registry, "MyApp")
 
         val props = Properties()
-        Files.newReader(File("src/test/resources/app.properties"), Charsets.UTF_8).use { r -> props.load(r) }
+        File("src/test/resources/app.properties").reader(Charsets.UTF_8).use { r -> props.load(r) }
 
         metrics.setDescriptionMappings(props)
     }
@@ -46,7 +44,7 @@ class PrometheusMetricsTest {
 
     @Test
     fun testDropwizardTimerCompatibility() {
-        metrics.timer("Test.timer#a").time().use { timer -> println("Hi") }
+        metrics.timer("Test.timer#a").time().use { println("Hi") }
 
         assertThat(samplesString(registry)).startsWith("[Name: myapp_test_timer_a Type: SUMMARY Help: myapp_test_timer_a")
                 .contains("Name: myapp_test_timer_a_count LabelNames: [] labelValues: [] Value: 1.0 TimestampMs: null, Name: myapp_test_timer_a_sum LabelNames: [] labelValues: [] Value: 1.979E-6")
@@ -80,7 +78,7 @@ class PrometheusMetricsTest {
 
     @Test
     fun testHistogramWithExplicitDesc() {
-        metrics.histogram("MyName", "MyDesc").time().use { timer ->
+        metrics.histogram("MyName", "MyDesc").time().use {
             // Something
         }
 
@@ -90,9 +88,9 @@ class PrometheusMetricsTest {
 
     @Test
     fun testSummaryTimers() {
-        metrics.summary("Test_calc1").time().use { timer -> println("First") }
+        metrics.summary("Test_calc1").time().use { println("First") }
 
-        metrics.summary("Test_calc1").time().use { timer -> println("Second") }
+        metrics.summary("Test_calc1").time().use { println("Second") }
 
         assertThat(samplesString(registry)).startsWith("[Name: myapp_test_calc1 Type: SUMMARY Help: myapp_test_calc1 ")
                 .contains("Name: myapp_test_calc1 LabelNames: [quantile] labelValues: [0.5] Value: 1.979E-6")
