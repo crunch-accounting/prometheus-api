@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.AverageTime)
 public class PromBenchmarks {
 
-    PrometheusMetrics metrics = new PrometheusMetrics();
+    private final PrometheusMetrics metrics = new PrometheusMetrics();
 
     @Benchmark
     public void testIncrement(Blackhole blackhole) {

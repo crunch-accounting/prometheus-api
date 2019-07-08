@@ -45,8 +45,9 @@ object AlertRulesGenerator2x {
         return yaml.dumpAsMap(AlertRulesPojo(group))
     }
 
+    @JvmStatic
     @VisibleForTesting
-    internal fun titlecase(s: String): String {
+    fun titlecase(s: String): String {
         if (s.isEmpty()) {
             return ""
         }
@@ -60,7 +61,7 @@ object AlertRulesGenerator2x {
     // https://bitbucket.org/asomov/snakeyaml/src/tip/src/test/java/org/yaml/snakeyaml/issues/issue60/CustomOrderTest.java?fileviewer=file-view-default
     private class UnsortedPropertyUtils : PropertyUtils() {
         override fun createPropertySet(type: Class<out Any>, bAccess: BeanAccess): Set<Property> {
-            return LinkedHashSet(getPropertiesMap(type, BeanAccess.FIELD).values)
+            return getPropertiesMap(type, BeanAccess.FIELD).values.toSet()
         }
     }
 
