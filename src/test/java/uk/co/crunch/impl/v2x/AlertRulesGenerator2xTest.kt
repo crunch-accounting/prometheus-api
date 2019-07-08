@@ -1,8 +1,7 @@
 package uk.co.crunch.impl.v2x
 
-import org.junit.Test
-
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Test
 import uk.co.crunch.impl.v2x.AlertRulesGenerator2x.titlecase
 
 class AlertRulesGenerator2xTest {

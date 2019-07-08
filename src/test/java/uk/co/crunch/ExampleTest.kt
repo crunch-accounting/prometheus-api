@@ -2,12 +2,13 @@ package uk.co.crunch
 
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.TestableTimeProvider
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
-import uk.co.crunch.api.PrometheusMetrics
-
-import org.assertj.core.api.Assertions.assertThat
+import strikt.api.expectThat
+import strikt.assertions.isNull
 import uk.co.crunch.TestUtils.samplesString
+import uk.co.crunch.api.PrometheusMetrics
 
 class ExampleTest {
     private var registry: CollectorRegistry? = null
@@ -22,8 +23,8 @@ class ExampleTest {
     fun testExample() {
         val ex = Example(PrometheusMetrics(registry!!, "Example"))
 
-        assertThat(registry!!.getSampleValue("example_sessions_open")).isNull()
-        assertThat(registry!!.getSampleValue("example_errors", arrayOf("error_type"), arrayOf("generic"))).isNull()
+        expectThat(registry!!.getSampleValue("example_sessions_open")).isNull()
+        expectThat(registry!!.getSampleValue("example_errors", arrayOf("error_type"), arrayOf("generic"))).isNull()
 
         val resp = ex.handleLogin()
         assertThat(resp).isEqualTo("Login handled!")  // Fairly pointless, just for PiTest coverage %
