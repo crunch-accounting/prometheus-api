@@ -3,8 +3,9 @@ package uk.co.crunch.benchmarks;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.infra.Blackhole;
 import uk.co.crunch.api.PrometheusMetrics;
-import uk.co.crunch.api.PrometheusMetrics.Context;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 @State(Scope.Benchmark)
@@ -22,8 +23,8 @@ public class PromBenchmarks {
     }
 
     @Benchmark
-    public void testTiming(Blackhole blackhole) {
-        try (Context ctxt = metrics.timer("Timer").time()) {
+    public void testTiming(Blackhole blackhole) throws IOException {
+        try (Closeable ctxt = metrics.timer("Timer").time()) {
             blackhole.consume(ctxt);  // Ensure we don't get optimised away
         }
     }

@@ -3,8 +3,10 @@ package uk.co.crunch.api
 import io.prometheus.client.CollectorRegistry
 import io.prometheus.client.TestableTimeProvider
 import io.prometheus.client.hotspot.StandardExports
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import strikt.api.expect
 import strikt.api.expectThat
 import strikt.assertions.contains
 import strikt.assertions.isEqualTo
@@ -13,14 +15,10 @@ import strikt.assertions.startsWith
 import uk.co.crunch.TestUtils.samplesString
 import java.io.File
 import java.util.*
-import kotlin.test.fail
 
 class PrometheusMetricsTest {
     private lateinit var metrics: PrometheusMetrics
     private lateinit var registry: CollectorRegistry
-
-    private val timedValueDemonstratingFriendlyTimingSyntax: String
-        get() = metrics.histogram("Test_calc1").time().use { return "Hi" }
 
     @BeforeEach
     fun setUp() {
@@ -30,7 +28,7 @@ class PrometheusMetricsTest {
         metrics = PrometheusMetrics(registry, "MyApp")
 
         val props = Properties()
-        File("src/test/resources/app.properties").reader(Charsets.UTF_8).use { r -> props.load(r) }
+        File("src/test/resources/app.properties").reader(Charsets.UTF_8).use { props.load(it) }
 
         metrics.setDescriptionMappings(props)
     }
@@ -39,16 +37,18 @@ class PrometheusMetricsTest {
     fun defaultConstructor() {
         val pm = PrometheusMetrics()
         pm.counter("counter_1").inc(1701.0)
-        expectThat(pm.registry.getSampleValue("counter_1")).isEqualTo(1701.0)
-
-        expectThat(registry.getSampleValue("counter_1")).isNull()
+        expect {
+            that(pm.registry.getSampleValue("counter_1")).isEqualTo(1701.0)
+            that(registry.getSampleValue("counter_1")).isNull()
+        }
     }
 
     @Test
     fun dropwizardTimerCompatibility() {
         metrics.timer("Test.timer#a").time().use { println("Hi") }
 
-        expectThat(samplesString(registry)).startsWith("[Name: myapp_test_timer_a Type: SUMMARY Help: myapp_test_timer_a")
+        expectThat(samplesString(registry))
+                .startsWith("[Name: myapp_test_timer_a Type: SUMMARY Help: myapp_test_timer_a")
                 .contains("Name: myapp_test_timer_a_count LabelNames: [] labelValues: [] Value: 1.0 TimestampMs: null, Name: myapp_test_timer_a_sum LabelNames: [] labelValues: [] Value: 1.979E-6")
         expectThat(registry.getSampleValue("myapp_test_timer_a_sum")!! * 1E+9).isEqualTo(1979.0)
     }
@@ -56,8 +56,10 @@ class PrometheusMetricsTest {
     @Test
     fun fropwizardHistogramCompatibility() {
         metrics.histogram("response-sizes").update(30000.0).update(4535.0)
-        expectThat(samplesString(registry)).isEqualTo("[Name: myapp_response_sizes Type: HISTOGRAM Help: myapp_response_sizes Samples: [Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.005] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.01] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.025] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.05] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.075] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.1] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.25] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.75] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [1.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [2.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [5.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [7.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [10.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [+Inf] Value: 2.0 TimestampMs: null, Name: myapp_response_sizes_count LabelNames: [] labelValues: [] Value: 2.0 TimestampMs: null, Name: myapp_response_sizes_sum LabelNames: [] labelValues: [] Value: 34535.0 TimestampMs: null]]")
-        expectThat(registry.getSampleValue("myapp_response_sizes_sum")).isEqualTo(34535.0)
+        expect {
+            that(samplesString(registry)).isEqualTo("[Name: myapp_response_sizes Type: HISTOGRAM Help: myapp_response_sizes Samples: [Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.005] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.01] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.025] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.05] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.075] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.1] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.25] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.75] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [1.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [2.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [5.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [7.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [10.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [+Inf] Value: 2.0 TimestampMs: null, Name: myapp_response_sizes_count LabelNames: [] labelValues: [] Value: 2.0 TimestampMs: null, Name: myapp_response_sizes_sum LabelNames: [] labelValues: [] Value: 34535.0 TimestampMs: null]]")
+            that(registry.getSampleValue("myapp_response_sizes_sum")).isEqualTo(34535.0)
+        }
     }
 
     @Test
@@ -68,7 +70,7 @@ class PrometheusMetricsTest {
 
     @Test
     fun histograms() {
-        timedValueDemonstratingFriendlyTimingSyntax
+        expectThat(metrics.histogram("Test_calc1").time().use { "Hi" }).isEqualTo("Hi")
 
         expectThat(samplesString(registry)).isEqualTo("[Name: myapp_test_calc1 Type: HISTOGRAM Help: myapp_test_calc1 Samples: [Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.005] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.01] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.025] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.05] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.075] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.1] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.25] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.5] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [0.75] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [1.0] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [2.5] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [5.0] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [7.5] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [10.0] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_bucket LabelNames: [le] labelValues: [+Inf] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_count LabelNames: [] labelValues: [] Value: 1.0 TimestampMs: null, Name: myapp_test_calc1_sum LabelNames: [] labelValues: [] Value: 1.979E-6 TimestampMs: null]]")
         expectThat(registry.getSampleValue("myapp_test_calc1_sum")!! * 1E+9).isEqualTo(1979.0)
@@ -80,18 +82,17 @@ class PrometheusMetricsTest {
 
     @Test
     fun histogramWithExplicitDesc() {
-        metrics.histogram("MyName", "MyDesc").time().use {
-            // Something
-        }
+        metrics.histogram("MyName", "MyDesc").time().use { /* Something */ }
 
-        expectThat(samplesString(registry)).isEqualTo("[Name: myapp_myname Type: HISTOGRAM Help: MyDesc Samples: [Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.005] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.01] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.025] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.05] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.075] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.1] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.25] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.5] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.75] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [1.0] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [2.5] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [5.0] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [7.5] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [10.0] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [+Inf] Value: 1.0 TimestampMs: null, Name: myapp_myname_count LabelNames: [] labelValues: [] Value: 1.0 TimestampMs: null, Name: myapp_myname_sum LabelNames: [] labelValues: [] Value: 1.979E-6 TimestampMs: null]]")
-        expectThat(registry.getSampleValue("myapp_myname_sum")!! * 1E+9).isEqualTo(1979.0)
+        expect {
+            that(samplesString(registry)).isEqualTo("[Name: myapp_myname Type: HISTOGRAM Help: MyDesc Samples: [Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.005] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.01] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.025] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.05] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.075] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.1] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.25] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.5] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [0.75] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [1.0] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [2.5] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [5.0] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [7.5] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [10.0] Value: 1.0 TimestampMs: null, Name: myapp_myname_bucket LabelNames: [le] labelValues: [+Inf] Value: 1.0 TimestampMs: null, Name: myapp_myname_count LabelNames: [] labelValues: [] Value: 1.0 TimestampMs: null, Name: myapp_myname_sum LabelNames: [] labelValues: [] Value: 1.979E-6 TimestampMs: null]]")
+            that(registry.getSampleValue("myapp_myname_sum")!! * 1E+9).isEqualTo(1979.0)
+        }
     }
 
     @Test
     fun summaryTimers() {
         metrics.summary("Test_calc1").time().use { println("First") }
-
         metrics.summary("Test_calc1").time().use { println("Second") }
 
         expectThat(samplesString(registry)).startsWith("[Name: myapp_test_calc1 Type: SUMMARY Help: myapp_test_calc1 ")
@@ -135,11 +136,12 @@ class PrometheusMetricsTest {
 
         val stErr = metrics.error("stripe_transaction")
         expectThat(stErr.count()).isEqualTo(2.0)
-        expectThat(registry.getSampleValue("myapp_errors", arrayOf("error_type"), arrayOf("stripe_transaction"))).isEqualTo(2.0)
 
-        expectThat(registry.getSampleValue("myapp_errors", arrayOf("error_type"), arrayOf("unknown"))).isNull()
-
-        expectThat(metrics.error("stripe_transaction", "with desc this time").count()).isEqualTo(3.0)
+        expect {
+            that(registry.getSampleValue("myapp_errors", arrayOf("error_type"), arrayOf("stripe_transaction"))).isEqualTo(2.0)
+            that(registry.getSampleValue("myapp_errors", arrayOf("error_type"), arrayOf("unknown"))).isNull()
+            that(metrics.error("stripe_transaction", "with desc this time").count()).isEqualTo(3.0)
+        }
     }
 
     @Test
@@ -193,11 +195,8 @@ class PrometheusMetricsTest {
     fun cannotReuseMetricName() {
         metrics.counter("xxx", "My first counter")
 
-        try {
-            metrics.gauge("xxx")
-            fail("Should not pass")
-        } catch (e: IllegalArgumentException) {
-            expectThat(e.message).isEqualTo("myapp_xxx is already used for a different type of metric")
-        }
+        val e = assertThrows(IllegalArgumentException::class.java) { metrics.gauge("xxx") }
+
+        expectThat(e.message).isEqualTo("myapp_xxx is already used for a different type of metric")
     }
 }
