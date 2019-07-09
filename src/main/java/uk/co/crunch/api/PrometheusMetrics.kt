@@ -3,7 +3,6 @@ package uk.co.crunch.api
 import io.prometheus.client.Collector
 import io.prometheus.client.CollectorRegistry
 import uk.co.crunch.utils.PrometheusUtils
-import java.io.Closeable
 import java.util.*
 import java.util.Optional.empty
 import java.util.Optional.of
@@ -163,6 +162,10 @@ class PrometheusMetrics {
 
     private interface Metric
 
+    interface Context : java.io.Closeable {
+        override fun close()
+    }
+
     class Counter internal constructor(private val promMetric: io.prometheus.client.Counter) : Metric {
         fun inc() = this.promMetric.inc()
         fun inc(incr: Double) = this.promMetric.inc(incr)
@@ -188,16 +191,16 @@ class PrometheusMetrics {
             return this
         }
 
-        fun time() = TimerContext(promMetric.startTimer()) as Closeable
+        fun time() = TimerContext(promMetric.startTimer()) as Context
 
-        private class TimerContext internal constructor(internal val requestTimer: io.prometheus.client.Summary.Timer) : Closeable {
+        private class TimerContext internal constructor(internal val requestTimer: io.prometheus.client.Summary.Timer) : Context {
             override fun close() = requestTimer.close()
         }
     }
 
     class Histogram internal constructor(private val promMetric: io.prometheus.client.Histogram) : Metric {
 
-        fun time() = TimerContext(promMetric.startTimer()) as Closeable
+        fun time() = TimerContext(promMetric.startTimer()) as Context
 
         fun update(value: Double) = observe(value)
 
@@ -206,7 +209,7 @@ class PrometheusMetrics {
             return this
         }
 
-        private class TimerContext internal constructor(internal val requestTimer: io.prometheus.client.Histogram.Timer) : Closeable {
+        private class TimerContext internal constructor(internal val requestTimer: io.prometheus.client.Histogram.Timer) : Context {
             override fun close() = requestTimer.close()
         }
     }
