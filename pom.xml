@@ -123,20 +123,6 @@
       <version>3.0.2</version>
     </dependency>
 
-    <!-- Implementation for annotation processors - do not leak into API users -->
-    <dependency>
-      <groupId>org.jtwig</groupId>
-      <artifactId>jtwig-core</artifactId>
-      <version>5.87.0.RELEASE</version>
-      <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <version>1.23</version>
-      <optional>true</optional>
-    </dependency>
-
     <!-- JMH for benchmarks - do not leak into API users -->
     <dependency>
       <groupId>org.openjdk.jmh</groupId>

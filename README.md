@@ -9,8 +9,6 @@
 * Lexical compatibility with Codahale/Dropwizard Metrics API, simplifying complete migration.
 * Regular Prometheus API can always be used directly for more advanced cases (unclear what those might be).
 
-Also `@AlertRule` API for [defining alert rules in Java code](alert_rules.md) and exporting rules files to disk (Prometheus 1.x format, or YAML for 2.x).
-
 ## Example:
 
 ```java
