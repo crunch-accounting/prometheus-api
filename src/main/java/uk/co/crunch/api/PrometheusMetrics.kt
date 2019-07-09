@@ -3,6 +3,7 @@ package uk.co.crunch.api
 import io.prometheus.client.Collector
 import io.prometheus.client.CollectorRegistry
 import uk.co.crunch.utils.PrometheusUtils
+import java.io.Closeable
 import java.util.*
 import java.util.Optional.empty
 import java.util.Optional.of
@@ -59,6 +60,12 @@ class PrometheusMetrics {
 
     @CheckReturnValue
     fun summary(name: String, desc: String) = getOrAdd(name, of(desc), MetricBuilder.SUMMARIES)
+
+    @CheckReturnValue
+    fun timed(name: String) = getOrAdd(name, empty(), MetricBuilder.ONE_SHOT_TIMERS)
+
+    @CheckReturnValue
+    fun timed(name: String, desc: String) = getOrAdd(name, of(desc), MetricBuilder.ONE_SHOT_TIMERS)
 
     @CheckReturnValue
     fun counter(name: String) = getOrAdd(name, empty(), MetricBuilder.COUNTERS)
@@ -118,51 +125,45 @@ class PrometheusMetrics {
 
         companion object {
             val COUNTERS: MetricBuilder<Counter> = object : MetricBuilder<Counter> {
-                override fun newMetric(name: String, desc: String, registry: CollectorRegistry): Counter {
-                    return Counter(registerPrometheusMetric(io.prometheus.client.Counter.build().name(name).help(desc).create(), registry))
-                }
+                override fun newMetric(name: String, desc: String, registry: CollectorRegistry) =
+                        Counter(registerPrometheusMetric(io.prometheus.client.Counter.build().name(name).help(desc).create(), registry))
 
                 override fun isInstance(metric: Metric) = metric is Counter
             }
 
             val GAUGES: MetricBuilder<Gauge> = object : MetricBuilder<Gauge> {
-                override fun newMetric(name: String, desc: String, registry: CollectorRegistry): Gauge {
-                    return Gauge(registerPrometheusMetric(io.prometheus.client.Gauge.build().name(name).help(desc).create(), registry))
-                }
+                override fun newMetric(name: String, desc: String, registry: CollectorRegistry) =
+                        Gauge(registerPrometheusMetric(io.prometheus.client.Gauge.build().name(name).help(desc).create(), registry))
 
                 override fun isInstance(metric: Metric) = metric is Gauge
             }
 
             val HISTOGRAMS: MetricBuilder<Histogram> = object : MetricBuilder<Histogram> {
-                override fun newMetric(name: String, desc: String, registry: CollectorRegistry): Histogram {
-                    return Histogram(registerPrometheusMetric(io.prometheus.client.Histogram.build().name(name).help(desc).create(), registry))
-                }
+                override fun newMetric(name: String, desc: String, registry: CollectorRegistry) =
+                        Histogram(registerPrometheusMetric(io.prometheus.client.Histogram.build().name(name).help(desc).create(), registry))
 
                 override fun isInstance(metric: Metric) = metric is Histogram
             }
 
             val SUMMARIES: MetricBuilder<Summary> = object : MetricBuilder<Summary> {
-                override fun newMetric(name: String, desc: String, registry: CollectorRegistry): Summary {
-                    return Summary(registerPrometheusMetric(io.prometheus.client.Summary.build()
-                            .name(name)
-                            .help(desc)
-                            .quantile(0.5, 0.01)    // Median
-                            .quantile(0.75, 0.01)   // 75th percentile (1% tolerated error)
-                            .quantile(0.9, 0.01)    // 90th percentile
-                            .quantile(0.95, 0.01)   // 95th percentile
-                            .quantile(0.99, 0.01)   // 99th percentile
-                            .quantile(0.999, 0.01)  // 99.9th percentile
-                            .create(), registry))
-                }
+                override fun newMetric(name: String, desc: String, registry: CollectorRegistry) =
+                        Summary(registerPrometheusMetric(createSummary(name, desc), registry))
 
                 override fun isInstance(metric: Metric) = metric is Summary
+            }
+
+            val ONE_SHOT_TIMERS: MetricBuilder<NewTimer> = object : MetricBuilder<NewTimer> {
+                override fun newMetric(name: String, desc: String, registry: CollectorRegistry) =
+                        NewTimer(registerPrometheusMetric(createSummary(name, desc), registry).startTimer())
+
+                override fun isInstance(metric: Metric) = metric is NewTimer
             }
         }
     }
 
     private interface Metric
 
-    interface Context : java.io.Closeable {
+    interface Context : Closeable {
         override fun close()
     }
 
@@ -183,7 +184,6 @@ class PrometheusMetrics {
     }
 
     class Summary internal constructor(private val promMetric: io.prometheus.client.Summary) : Metric {
-
         fun update(value: Double) = observe(value)
 
         fun observe(value: Double): Summary {
@@ -196,6 +196,10 @@ class PrometheusMetrics {
         private class TimerContext internal constructor(internal val requestTimer: io.prometheus.client.Summary.Timer) : Context {
             override fun close() = requestTimer.close()
         }
+    }
+
+    class NewTimer internal constructor(private val promTimer: io.prometheus.client.Summary.Timer) : Metric, Closeable {
+        override fun close() = promTimer.close()
     }
 
     class Histogram internal constructor(private val promMetric: io.prometheus.client.Histogram) : Metric {
@@ -215,6 +219,17 @@ class PrometheusMetrics {
     }
 
     companion object {
+
+        private fun createSummary(name: String, description: String) = io.prometheus.client.Summary.build()
+                .name(name)
+                .help(description)
+                .quantile(0.5, 0.01)    // Median
+                .quantile(0.75, 0.01)   // 75th percentile (1% tolerated error)
+                .quantile(0.9, 0.01)    // 90th percentile
+                .quantile(0.95, 0.01)   // 95th percentile
+                .quantile(0.99, 0.01)   // 99th percentile
+                .quantile(0.999, 0.01)  // 99.9th percentile
+                .create()
 
         private fun <T : Collector> registerPrometheusMetric(metric: T, registry: CollectorRegistry): T {
             try {

@@ -54,7 +54,43 @@ class PrometheusMetricsTest {
     }
 
     @Test
-    fun fropwizardHistogramCompatibility() {
+    fun dropwizardTimerWithDescriptionCompatibility() {
+        metrics.timer("Test.timer#a", "blah").time().use { println("Hi") }
+
+        expectThat(samplesString(registry))
+                .startsWith("[Name: myapp_test_timer_a Type: SUMMARY Help: blah")
+                .contains("Name: myapp_test_timer_a_count LabelNames: [] labelValues: [] Value: 1.0 TimestampMs: null, Name: myapp_test_timer_a_sum LabelNames: [] labelValues: [] Value: 1.979E-6")
+        expectThat(registry.getSampleValue("myapp_test_timer_a_sum")!! * 1E+9).isEqualTo(1979.0)
+    }
+
+    @Test
+    fun timed() {
+        val random = System.nanoTime()
+        metrics.timed("Test.timer#$random").use { println("Hi $random") }
+
+        // reuse
+        metrics.timed("Test.timer#$random").use { println("Bye $random") }
+
+        expectThat(samplesString(registry))
+                .startsWith("[Name: myapp_test_timer_$random Type: SUMMARY Help: myapp_test")
+                .contains("Name: myapp_test_timer_" + random + "_count LabelNames: [] labelValues: [] Value: 2.0 TimestampMs: null")
+                .contains("Name: myapp_test_timer_" + random + "_sum LabelNames: [] labelValues: [] Value: 5.937E-6")
+        expectThat(registry.getSampleValue("myapp_test_timer_" + random + "_sum")!! * 1E+9).isEqualTo(5937.0)
+    }
+
+    @Test
+    fun timedWithDescription() {
+        val random = System.nanoTime()
+        metrics.timed("Test.timer#$random", "Desc").use { println("Hi") }
+
+        expectThat(samplesString(registry))
+                .startsWith("[Name: myapp_test_timer_$random Type: SUMMARY Help: Desc")
+                .contains("Name: myapp_test_timer_" + random + "_count LabelNames: [] labelValues: [] Value: 1.0 TimestampMs: null, Name: myapp_test_timer_" + random + "_sum LabelNames: [] labelValues: [] Value: 1.979E-6")
+        expectThat(registry.getSampleValue("myapp_test_timer_" + random + "_sum")!! * 1E+9).isEqualTo(1979.0)
+    }
+
+    @Test
+    fun dropwizardHistogramCompatibility() {
         metrics.histogram("response-sizes").update(30000.0).update(4535.0)
         expect {
             that(samplesString(registry)).isEqualTo("[Name: myapp_response_sizes Type: HISTOGRAM Help: myapp_response_sizes Samples: [Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.005] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.01] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.025] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.05] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.075] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.1] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.25] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [0.75] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [1.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [2.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [5.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [7.5] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [10.0] Value: 0.0 TimestampMs: null, Name: myapp_response_sizes_bucket LabelNames: [le] labelValues: [+Inf] Value: 2.0 TimestampMs: null, Name: myapp_response_sizes_count LabelNames: [] labelValues: [] Value: 2.0 TimestampMs: null, Name: myapp_response_sizes_sum LabelNames: [] labelValues: [] Value: 34535.0 TimestampMs: null]]")

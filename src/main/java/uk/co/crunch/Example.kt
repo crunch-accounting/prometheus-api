@@ -17,6 +17,6 @@ class Example(private val metrics: PrometheusMetrics) {
     }
 
     fun handleLogin(): String {
-        metrics.timer("Sessions.handleLogin", "Login times").time().use { return "Login handled!" }
+        metrics.timed("Sessions.handleLogin", "Login times").use { return "Login handled!" }
     }
 }
