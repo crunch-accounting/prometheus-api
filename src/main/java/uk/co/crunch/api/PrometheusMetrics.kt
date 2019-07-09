@@ -152,11 +152,11 @@ class PrometheusMetrics {
                 override fun isInstance(metric: Metric) = metric is Summary
             }
 
-            val ONE_SHOT_TIMERS: MetricBuilder<NewTimer> = object : MetricBuilder<NewTimer> {
+            val ONE_SHOT_TIMERS: MetricBuilder<OneShotTimer> = object : MetricBuilder<OneShotTimer> {
                 override fun newMetric(name: String, desc: String, registry: CollectorRegistry) =
-                        NewTimer(registerPrometheusMetric(createSummary(name, desc), registry).startTimer())
+                        OneShotTimer(registerPrometheusMetric(createSummary(name, desc), registry).startTimer())
 
-                override fun isInstance(metric: Metric) = metric is NewTimer
+                override fun isInstance(metric: Metric) = metric is OneShotTimer
             }
         }
     }
@@ -198,7 +198,7 @@ class PrometheusMetrics {
         }
     }
 
-    class NewTimer internal constructor(private val promTimer: io.prometheus.client.Summary.Timer) : Metric, Closeable {
+    class OneShotTimer internal constructor(private val promTimer: io.prometheus.client.Summary.Timer) : Metric, Closeable {
         override fun close() = promTimer.close()
     }
 
