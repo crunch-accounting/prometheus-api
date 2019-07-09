@@ -11,17 +11,23 @@
 
 ## Example:
 
-```java
-private final PrometheusMetrics metrics;
+```kotlin
+class Example(private val metrics: PrometheusMetrics) {
 
-public void onUserLogin(Object event) {
-    metrics.gauge("Sessions.open").inc();
-    metrics.counter("Sessions.total").inc();
-}
+    fun onUserLogin(event: Any) {
+        metrics.gauge("Sessions.open").inc()
+    }
 
-public String handleLogin() {
-    try (Context timer = metrics.summary("Sessions.handleLogin").time()) {
-        return "Login handled!";
+    fun onUserLogout(event: Any) {
+        metrics.gauge("Sessions.open").dec()
+    }
+
+    fun onError(event: Any) {
+        metrics.error("generic", "Generic errors")
+    }
+
+    fun handleLogin(): String {
+        metrics.timer("Sessions.handleLogin").time().use { return "Login handled!" }
     }
 }
 ```
@@ -32,21 +38,20 @@ public String handleLogin() {
 
 Configure a common prefix...
 
-```java
-@Value("${spring.application.name}")  // "MyApp"
-private String prefixToUse;
+```kotlin
+@Value("${spring.application.name}") String prefixToUse // "MyApp"
 
 @Bean
-public PrometheusMetrics prometheusMetrics(CollectorRegistry collector) {
-    return new PrometheusMetrics(collector, prefixToUse);
+fun prometheusMetrics(collector: CollectorRegistry) : PrometheusMetrics {
+    return PrometheusMetrics(collector, prefixToUse)
 }
 ```
 
 All created metrics will use that (normalised) prefix:
 
-```java
-metrics.counter("counter_1").inc();
-assertThat(samplesString(registry)).startsWith("[Name: myapp_counter_1 Type: COUNTER ");
+```kotlin
+metrics.counter("counter_1").inc()
+expectThat(samplesString(registry)).startsWith("[Name: myapp_counter_1 Type: COUNTER ")
 ```
 
 ---
@@ -55,10 +60,10 @@ assertThat(samplesString(registry)).startsWith("[Name: myapp_counter_1 Type: COU
 
 Defaulted if not set:
 
-```java
-metrics.timer("transaction");  // ==> "transaction"
+```kotlin
+metrics.timer("transaction")  // ==> "transaction"
 
-metrics.timer("transaction", "Transaction time");  // ==> "Transaction time"
+metrics.timer("transaction", "Transaction time")  // ==> "Transaction time"
 ```
 
 Alternatively, load a Java `Properties` file like:
@@ -69,19 +74,17 @@ transaction = Transaction time
 
 when you create your PrometheusMetrics object, e.g.
 
-```java
-final Properties props = new Properties();
-try (Reader r = Files.newReader( new File("descriptions.properties"), Charsets.UTF_8)) {
-    props.load(r);
-}
+```kotlin
+val props = Properties()
+File("descriptions.properties").reader(Charsets.UTF_8).use { props.load(it) }
 
-metrics.setDescriptionMappings(props);
+metrics.setDescriptionMappings(props)
 ```
 
 Now you can use the simpler API:
 
-```java
-metrics.timer("transaction");  // ==> "Transaction time"
+```kotlin
+metrics.timer("transaction")  // ==> "Transaction time"
 ```
 
 ---
@@ -96,19 +99,19 @@ By default, summaries will get the following percentiles, rather than a simple m
 
 #### Error counts implemented via labels:
 
-```java
-metrics.error("salesforce");
+```kotlin
+metrics.error("salesforce")
 
 assertThat(registry.getSampleValue("myapp_errors", \
-                                    new String[]{"error_type"}, \
-                                    new String[]{"salesforce"})).isEqualTo(1.0d);
+                                    arrayOf("error_type"), \
+                                    arrayOf("salesforce")).isEqualTo(1.0d)
 // ...
 
-metrics.error("transaction");
+metrics.error("transaction")
 
-assertThat(registry.getSampleValue("myapp_errors", \
-                                    new String[]{"error_type"}, \
-                                    new String[]{"transaction"})).isEqualTo(1.0d);
+expectThat(registry.getSampleValue("myapp_errors", \
+                                    arrayOf("error_type"), \
+                                    arrayOf("transaction")).isEqualTo(1.0d)
 ```
 
 ---

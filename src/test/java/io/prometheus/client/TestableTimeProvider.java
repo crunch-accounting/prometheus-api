@@ -1,5 +1,6 @@
 package io.prometheus.client;
 
+@SuppressWarnings("unused")
 public class TestableTimeProvider extends SimpleTimer.TimeProvider {
 
     private long baseTime = System.currentTimeMillis();

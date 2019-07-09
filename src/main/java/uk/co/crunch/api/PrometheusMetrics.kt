@@ -1,6 +1,5 @@
 package uk.co.crunch.api
 
-import com.google.common.annotations.VisibleForTesting
 import io.prometheus.client.Collector
 import io.prometheus.client.CollectorRegistry
 import uk.co.crunch.utils.PrometheusUtils
@@ -11,13 +10,9 @@ import java.util.Optional.of
 import java.util.concurrent.ConcurrentHashMap
 import javax.annotation.CheckReturnValue
 
-// More friendly, MetricRegistry-inspired Prometheus API wrapper
-// FIXME Ideally want to inject application name into this (or create Spring wrapper)
-
 class PrometheusMetrics {
     private val metrics = ConcurrentHashMap<String, Metric>()
 
-    @VisibleForTesting
     internal var registry: CollectorRegistry
 
     private val metricNamePrefix: String
@@ -38,7 +33,6 @@ class PrometheusMetrics {
         this.registry.register(collector)
     }
 
-    @VisibleForTesting
     fun setDescriptionMappings(props: Properties) {
         this.descriptionMappings = props
     }
