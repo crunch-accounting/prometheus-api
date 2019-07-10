@@ -3,8 +3,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>uk.co.crunch</groupId>
-  <artifactId>prometheus-api</artifactId>
-  <version>1.2.1</version>
+  <artifactId>prometheus-kotlin-api</artifactId>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <name>Prometheus API</name>
